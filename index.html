@@ -3,106 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TON Crash Premium</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>TON Rocket Elite</title>
     <style>
-        :root { --tg-blue: #2483ff; --dark-bg: #0b0e17; }
-        body { background-color: var(--dark-bg); color: white; font-family: sans-serif; margin: 0; padding: 0; user-select: none; direction: rtl; overflow: hidden; }
+        :root { --bg: #0f121a; --card: #181c28; --blue: #2483ff; --gold: #f59e0b; }
+        body { background: var(--bg); color: white; font-family: -apple-system, sans-serif; margin: 0; direction: rtl; user-select: none; }
         
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #1a1f2e; border-bottom: 1px solid #2d344b; }
-        .balance-container { background: #131724; padding: 6px 14px; border-radius: 50px; display: flex; align-items: center; border: 1px solid #2d344b; }
-        .ton-logo { width: 18px; height: 18px; margin-left: 8px; cursor: pointer; }
+        /* Header */
+        .header { display: flex; justify-content: space-between; padding: 15px; background: #161a25; border-bottom: 1px solid #252b3d; }
+        .bal-box { background: #0d1017; padding: 5px 12px; border-radius: 50px; border: 1px solid #252b3d; display: flex; align-items: center; gap: 8px; font-weight: bold; }
 
-        .game-canvas { height: 280px; position: relative; overflow: hidden; background: radial-gradient(circle at center, #1c253d 0%, #0b0e17 100%); margin: 10px; border-radius: 20px; }
-        #multiplier { position: absolute; top: 40%; width: 100%; text-align: center; font-size: 58px; font-weight: 900; z-index: 10; transition: color 0.3s; }
-        #rocket { position: absolute; bottom: 20px; right: 20px; width: 85px; z-index: 5; transition: transform 0.05s linear; }
+        /* Game Area */
+        .game-canvas { height: 240px; position: relative; overflow: hidden; background: radial-gradient(circle at 30% 30%, #1c253d 0%, #0b0e17 100%); margin: 10px; border-radius: 20px; }
+        #multiplier { position: absolute; top: 35%; width: 100%; text-align: center; font-size: 50px; font-weight: 900; z-index: 10; }
+        #rocket { position: absolute; bottom: 20px; right: 20px; width: 70px; z-index: 5; transition: transform 0.1s linear; }
 
-        /* تأثير الهدايا */
-        .gift-effect { position: absolute; font-size: 30px; animation: flyUp 1.5s forwards; z-index: 8; pointer-events: none; }
-        @keyframes flyUp { 
-            0% { transform: translateY(0) scale(1); opacity: 1; }
-            100% { transform: translateY(-150px) scale(1.5); opacity: 0; }
-        }
+        /* Bet Controls - النسخة الاحترافية */
+        .bet-controls { background: var(--card); padding: 20px; border-radius: 30px 30px 0 0; border-top: 1px solid #252b3d; }
+        .input-group { display: flex; background: #0d1017; border-radius: 12px; padding: 8px; margin-bottom: 15px; align-items: center; justify-content: space-between; border: 1px solid #252b3d; }
+        .input-group input { background: none; border: none; color: white; font-size: 18px; width: 60%; text-align: center; outline: none; }
+        .btn-small { background: #252b3d; border: none; color: #8a91a8; padding: 5px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; }
 
-        .bet-area { background: #1a1f2e; margin: 10px; border-radius: 20px; padding: 25px; border: 1px solid #2d344b; }
-        .btn-bet { width: 100%; padding: 18px; border-radius: 15px; border: none; font-size: 20px; font-weight: bold; color: white; background: linear-gradient(180deg, #2483ff 0%, #0056b3 100%); cursor: pointer; }
-        .btn-bet.cashout { background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); }
+        .btn-main { width: 100%; padding: 18px; border-radius: 15px; border: none; font-size: 20px; font-weight: bold; color: white; background: var(--blue); box-shadow: 0 4px 15px rgba(36, 131, 255, 0.3); }
+        .btn-main.cashout { background: var(--gold); box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); }
+
+        /* Players List */
+        .players { margin-top: 20px; }
+        .player-item { display: flex; justify-content: space-between; padding: 12px; background: #1c2230; border-radius: 12px; margin-bottom: 8px; font-size: 14px; border: 1px solid #252b3d; }
+        .p-win { color: #10b981; font-weight: bold; }
+
+        /* Gifts */
+        .gift { position: absolute; font-size: 24px; animation: popUp 1s forwards; pointer-events: none; }
+        @keyframes popUp { 0% { transform: scale(0); opacity: 1; } 100% { transform: translateY(-100px) scale(1.5); opacity: 0; } }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Lucky" style="width:30px; border-radius:50%;">
-            <span style="font-size: 14px;">لاعب 95</span>
-        </div>
-        <div class="balance-container">
+        <div style="display:flex; align-items:center; gap:8px;">⚙️ <span>لاعب 95</span></div>
+        <div class="bal-box">
             <span id="balance">1000.00</span>
-            <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" class="ton-logo" onclick="adminMode()">
+            <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" width="18" onclick="godMode()">
         </div>
     </div>
 
     <div class="game-canvas" id="stage">
         <div id="multiplier">1.00x</div>
-        <img id="rocket" src="https://i.ibb.co/h7R0v6m/rocket-icon.png" style="transform: rotate(45deg);">
+        <img id="rocket" src="https://raw.githubusercontent.com/TelegramMessenger/Telegram-iOS/master/submodules/LegacyComponents/Resources/LegacyComponents.bundle/BaseSheetRocket%402x.png">
     </div>
 
-    <div class="bet-area">
-        <button id="mainBtn" class="btn-bet" onclick="handleAction()">وضع الرهان</button>
+    <div class="bet-controls">
+        <div style="font-size: 12px; color: #8a91a8; margin-bottom: 8px;">مبلغ الرهان (TON)</div>
+        <div class="input-group">
+            <button class="btn-small" onclick="adjustBet(0.5)">/2</button>
+            <input type="number" id="betAmount" value="10.0" step="1">
+            <button class="btn-small" onclick="adjustBet(2)">x2</button>
+        </div>
+
+        <button id="mainBtn" class="btn-main" onclick="handleAction()">وضع الرهان</button>
+
+        <div class="players" id="playerList">
+            </div>
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
         let bal = 1000, m = 1.0, active = false, god = false, loop, limit;
-        const gifts = ['🎁', '⭐', '💎', '🚀', '✨'];
+        let currentBet = 10;
 
-        function adminMode() { god = !god; if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy'); }
+        function godMode() { god = !god; alert(god ? "Admin Mode Active!" : "Admin Mode Off"); }
 
-        function handleAction() { if(!active) start(); else collect(); }
+        function adjustBet(factor) {
+            let input = document.getElementById('betAmount');
+            input.value = (parseFloat(input.value) * factor).toFixed(1);
+        }
 
-        function spawnGift() {
-            const gift = document.createElement('div');
-            gift.className = 'gift-effect';
-            gift.innerText = gifts[Math.floor(Math.random() * gifts.length)];
-            gift.style.left = Math.random() * 80 + 10 + '%';
-            gift.style.top = '60%';
-            document.getElementById('stage').appendChild(gift);
-            setTimeout(() => gift.remove(), 1500);
+        function handleAction() {
+            if(!active) start(); else collect();
         }
 
         function start() {
-            if(bal < 10) return;
-            bal -= 10; document.getElementById('balance').innerText = bal.toFixed(2);
+            currentBet = parseFloat(document.getElementById('betAmount').value);
+            if(bal < currentBet) return alert("رصيدك ما كافي!");
+            
+            bal -= currentBet;
+            document.getElementById('balance').innerText = bal.toFixed(2);
             active = true; m = 1.0;
-            limit = god ? 100.0 : (Math.random() * 3 + 1.2);
+            limit = god ? 99.0 : (Math.random() * 3.5 + 1.1);
+            
             const btn = document.getElementById('mainBtn');
             btn.innerText = "سحب الأرباح";
             btn.classList.add('cashout');
-            
+            updatePlayers(true);
+
             loop = setInterval(() => {
                 m += 0.01;
-                const mDisplay = document.getElementById('multiplier');
-                mDisplay.innerText = m.toFixed(2) + "x";
+                document.getElementById('multiplier').innerText = m.toFixed(2) + "x";
                 
-                // حركة الصاروخ
-                let move = (m - 1) * 60;
-                document.getElementById('rocket').style.transform = `translate(-${move*0.8}px, -${move}px) rotate(45deg)`;
+                let move = (m - 1) * 55;
+                document.getElementById('rocket').style.transform = `translate(-${move}px, -${move}px) rotate(45deg)`;
 
-                // شرط الهدايا: من يعبر 2.5 تبدأ تطلع الهدايا
-                if (m >= 2.5) {
-                    mDisplay.style.color = "#f59e0b"; // تغيير لون العداد للذهبي
-                    if (Math.random() > 0.8) spawnGift(); // تظهر هدايا عشوائية
+                if(m >= 2.5) {
+                    document.getElementById('multiplier').style.color = "#f59e0b";
+                    if(Math.random() > 0.85) spawnGift();
                 }
-
                 if(m >= limit) crash();
             }, 80);
         }
 
+        function spawnGift() {
+            const g = document.createElement('div');
+            g.className = 'gift';
+            g.innerText = ["🎁","💎","⭐"][Math.floor(Math.random()*3)];
+            g.style.left = Math.random()*80 + '%';
+            g.style.top = '50%';
+            document.getElementById('stage').appendChild(g);
+            setTimeout(() => g.remove(), 1000);
+        }
+
         function collect() {
             clearInterval(loop);
-            bal += (10 * m);
+            let win = currentBet * m;
+            bal += win;
             document.getElementById('balance').innerText = bal.toFixed(2);
-            end("فزت بـ " + (10 * m).toFixed(1));
+            end("ربحت " + win.toFixed(1));
         }
 
         function crash() {
@@ -115,14 +137,27 @@
             active = false;
             const btn = document.getElementById('mainBtn');
             btn.innerText = txt;
-            btn.disabled = true;
             setTimeout(() => {
-                btn.disabled = false;
-                btn.classList.remove('cashout');
                 btn.innerText = "وضع الرهان";
-                document.getElementById('rocket').style.transform = "rotate(45deg)";
+                btn.classList.remove('cashout');
                 document.getElementById('multiplier').innerText = "1.00x";
                 document.getElementById('multiplier').style.color = "white";
+                document.getElementById('rocket').style.transform = "none";
+                updatePlayers(false);
             }, 2000);
         }
+
+        function updatePlayers(isLive) {
+            const list = document.getElementById('playerList');
+            const users = ["Ali_88", "Karrar", "Murtada", "User_TON"];
+            list.innerHTML = '';
+            users.forEach(u => {
+                list.innerHTML += `
+                    <div class="player-item">
+                        <span>👤 ${u}</span>
+                        <span class="${isLive ? '' : 'p-win'}">${isLive ? 'رهان: 15' : 'فاز بـ '+(Math.random()*2+1).toFixed(2)+'x'}</span>
+                    </div>`;
+            });
+        }
+        updatePlayers(false);
     </script>
