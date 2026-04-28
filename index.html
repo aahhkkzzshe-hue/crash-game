@@ -3,109 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TON Classic</title>
+    <title>TON Crash Premium</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --ton-color: #0098ea; --bg: #0b0f1a; }
-        body { background-color: var(--bg); color: white; font-family: sans-serif; margin: 0; overflow: hidden; user-select: none; }
-        .header { display: flex; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.03); border-bottom: 1px solid #1e293b; }
-        .balance-box { display: flex; align-items: center; background: #161f32; padding: 5px 12px; border-radius: 50px; border: 1px solid #2e3c51; }
-        .ton-icon { width: 22px; height: 22px; margin-right: 8px; cursor: pointer; } /* الزر السري هنا */
-        #game-view { height: 55vh; position: relative; background: radial-gradient(circle at bottom, #161f32 0%, #0b0f1a 100%); }
-        #rocket { position: absolute; bottom: 30px; left: 15%; font-size: 65px; transition: transform 0.1s linear; transform: rotate(-45deg); filter: drop-shadow(0 0 15px var(--ton-color)); }
-        #multiplier { position: absolute; top: 35%; width: 100%; text-align: center; font-size: 70px; font-weight: 900; }
-        .controls { padding: 25px; }
-        .btn { width: 100%; padding: 20px; font-size: 22px; font-weight: bold; border: none; border-radius: 18px; color: white; background: linear-gradient(180deg, #0098ea 0%, #0066cc 100%); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .btn.cashout { background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); }
-        .btn:disabled { opacity: 0.5; }
+        :root { --tg-blue: #2483ff; --dark-bg: #0b0e17; }
+        body { background-color: var(--dark-bg); color: white; font-family: sans-serif; margin: 0; padding: 0; user-select: none; direction: rtl; overflow: hidden; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #1a1f2e; border-bottom: 1px solid #2d344b; }
+        .balance-container { background: #131724; padding: 6px 14px; border-radius: 50px; display: flex; align-items: center; border: 1px solid #2d344b; }
+        .ton-logo { width: 18px; height: 18px; margin-left: 8px; cursor: pointer; }
+
+        .game-canvas { height: 280px; position: relative; overflow: hidden; background: radial-gradient(circle at center, #1c253d 0%, #0b0e17 100%); margin: 10px; border-radius: 20px; }
+        #multiplier { position: absolute; top: 40%; width: 100%; text-align: center; font-size: 58px; font-weight: 900; z-index: 10; transition: color 0.3s; }
+        #rocket { position: absolute; bottom: 20px; right: 20px; width: 85px; z-index: 5; transition: transform 0.05s linear; }
+
+        /* تأثير الهدايا */
+        .gift-effect { position: absolute; font-size: 30px; animation: flyUp 1.5s forwards; z-index: 8; pointer-events: none; }
+        @keyframes flyUp { 
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-150px) scale(1.5); opacity: 0; }
+        }
+
+        .bet-area { background: #1a1f2e; margin: 10px; border-radius: 20px; padding: 25px; border: 1px solid #2d344b; }
+        .btn-bet { width: 100%; padding: 18px; border-radius: 15px; border: none; font-size: 20px; font-weight: bold; color: white; background: linear-gradient(180deg, #2483ff 0%, #0056b3 100%); cursor: pointer; }
+        .btn-bet.cashout { background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div style="color: var(--ton-color); font-weight: bold;">CLASSIC</div>
-        <div class="balance-box">
-            <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" class="ton-icon" onclick="toggleAdmin()">
-            <span id="user-balance" style="font-weight: bold;">1,000.00</span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Lucky" style="width:30px; border-radius:50%;">
+            <span style="font-size: 14px;">لاعب 95</span>
+        </div>
+        <div class="balance-container">
+            <span id="balance">1000.00</span>
+            <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" class="ton-logo" onclick="adminMode()">
         </div>
     </div>
 
-    <div id="game-view">
+    <div class="game-canvas" id="stage">
         <div id="multiplier">1.00x</div>
-        <div id="rocket">🚀</div>
+        <img id="rocket" src="https://i.ibb.co/h7R0v6m/rocket-icon.png" style="transform: rotate(45deg);">
     </div>
 
-    <div class="controls">
-        <button id="actionBtn" class="btn" onclick="handleAction()">ابدأ الرهان (100 TON)</button>
+    <div class="bet-area">
+        <button id="mainBtn" class="btn-bet" onclick="handleAction()">وضع الرهان</button>
     </div>
 
     <script>
-        const webapp = window.Telegram.WebApp;
-        webapp.expand();
+        const tg = window.Telegram.WebApp;
+        let bal = 1000, m = 1.0, active = false, god = false, loop, limit;
+        const gifts = ['🎁', '⭐', '💎', '🚀', '✨'];
 
-        let balance = 1000, multiplier = 1.0, isRunning = false, interval, crashPoint;
-        let godMode = false; // الوضع السري
+        function adminMode() { god = !god; if(tg.HapticFeedback) tg.HapticFeedback.impactOccurred('heavy'); }
 
-        // الوظيفة السرية: تفعيل وضع عدم الانفجار
-        function toggleAdmin() {
-            godMode = !godMode;
-            // تذبذب بسيط بالموبايل كإشارة لك فقط إن الوضع تفعل
-            if(webapp.HapticFeedback) webapp.HapticFeedback.notificationOccurred('success');
-        }
+        function handleAction() { if(!active) start(); else collect(); }
 
-        function handleAction() {
-            if (!isRunning) start(); else cash();
+        function spawnGift() {
+            const gift = document.createElement('div');
+            gift.className = 'gift-effect';
+            gift.innerText = gifts[Math.floor(Math.random() * gifts.length)];
+            gift.style.left = Math.random() * 80 + 10 + '%';
+            gift.style.top = '60%';
+            document.getElementById('stage').appendChild(gift);
+            setTimeout(() => gift.remove(), 1500);
         }
 
         function start() {
-            if(balance < 100) return;
-            balance -= 100;
-            document.getElementById('user-balance').innerText = balance.toFixed(2);
-            isRunning = true; multiplier = 1.0;
-            
-            // إذا فعلت الوضع السري، تنفجر عند الـ 100x أو أكثر
-            crashPoint = godMode ? (Math.random() * 50 + 100) : (Math.random() * 3.5 + 1.2);
-            
-            const btn = document.getElementById('actionBtn');
-            btn.innerText = "اسحب الأرباح";
+            if(bal < 10) return;
+            bal -= 10; document.getElementById('balance').innerText = bal.toFixed(2);
+            active = true; m = 1.0;
+            limit = god ? 100.0 : (Math.random() * 3 + 1.2);
+            const btn = document.getElementById('mainBtn');
+            btn.innerText = "سحب الأرباح";
             btn.classList.add('cashout');
-
-            interval = setInterval(() => {
-                multiplier += 0.01;
-                document.getElementById('multiplier').innerText = multiplier.toFixed(2) + "x";
+            
+            loop = setInterval(() => {
+                m += 0.01;
+                const mDisplay = document.getElementById('multiplier');
+                mDisplay.innerText = m.toFixed(2) + "x";
                 
-                let h = (multiplier - 1) * 70, f = (multiplier - 1) * 15;
-                document.getElementById('rocket').style.transform = `translate(${f}px, -${h}px) rotate(-45deg)`;
+                // حركة الصاروخ
+                let move = (m - 1) * 60;
+                document.getElementById('rocket').style.transform = `translate(-${move*0.8}px, -${move}px) rotate(45deg)`;
 
-                if (multiplier >= crashPoint) boom();
-            }, 70);
+                // شرط الهدايا: من يعبر 2.5 تبدأ تطلع الهدايا
+                if (m >= 2.5) {
+                    mDisplay.style.color = "#f59e0b"; // تغيير لون العداد للذهبي
+                    if (Math.random() > 0.8) spawnGift(); // تظهر هدايا عشوائية
+                }
+
+                if(m >= limit) crash();
+            }, 80);
         }
 
-        function cash() {
-            clearInterval(interval);
-            balance += (100 * multiplier);
-            document.getElementById('user-balance').innerText = balance.toFixed(2);
-            isRunning = false;
-            document.getElementById('actionBtn').innerText = "فزت بـ " + (100 * multiplier).toFixed(0);
-            document.getElementById('actionBtn').disabled = true;
-            setTimeout(reset, 2000);
+        function collect() {
+            clearInterval(loop);
+            bal += (10 * m);
+            document.getElementById('balance').innerText = bal.toFixed(2);
+            end("فزت بـ " + (10 * m).toFixed(1));
         }
 
-        function boom() {
-            clearInterval(interval);
-            isRunning = false;
+        function crash() {
+            clearInterval(loop);
             document.getElementById('multiplier').innerText = "💥";
-            document.getElementById('rocket').style.transform = "scale(0)";
-            document.getElementById('actionBtn').innerText = "خسرت!";
-            document.getElementById('actionBtn').disabled = true;
-            setTimeout(reset, 2000);
+            end("خسرت!");
         }
 
-        function reset() {
-            const btn = document.getElementById('actionBtn');
-            btn.disabled = false; btn.classList.remove('cashout');
-            btn.innerText = "ابدأ الرهان (100 TON)";
-            document.getElementById('rocket').style.transform = "rotate(-45deg)";
-            document.getElementById('multiplier').innerText = "1.00x";
+        function end(txt) {
+            active = false;
+            const btn = document.getElementById('mainBtn');
+            btn.innerText = txt;
+            btn.disabled = true;
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.classList.remove('cashout');
+                btn.innerText = "وضع الرهان";
+                document.getElementById('rocket').style.transform = "rotate(45deg)";
+                document.getElementById('multiplier').innerText = "1.00x";
+                document.getElementById('multiplier').style.color = "white";
+            }, 2000);
         }
     </script>
