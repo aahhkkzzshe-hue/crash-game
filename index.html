@@ -2,146 +2,107 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TON Crash Pro UI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Crash UI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* نظام الألوان وتصفير الهوامش */
-        :root { --main-bg: #0b0e14; --surface: #151921; --accent: #2483ff; --gold: #f59e0b; --green: #10b981; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, sans-serif; }
+        body { background-color: #0b0e11; color: #ffffff; overflow: hidden; height: 100vh; }
+        .game-card { background: #15191e; border-radius: 16px; border: 1px solid #2b2f36; padding: 20px; }
+        .multiplier-text { font-size: 4rem; font-weight: 800; color: #f0b90b; } /* لون الذهب المشهور */
+        .player-row { background: #1e2329; border-radius: 8px; padding: 10px; margin-bottom: 5px; border-left: 4px solid #2b2f36; }
+        .gift-status { color: #f0b90b; background: rgba(240, 185, 11, 0.1); padding: 2px 8px; border-radius: 5px; font-weight: bold; font-size: 0.8rem; }
         
-        body { background: var(--main-bg); color: white; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-
-        /* 1. Top Bar (Header) */
-        header { height: 55px; padding: 0 15px; display: flex; justify-content: space-between; align-items: center; background: var(--surface); border-bottom: 1px solid #252b3d; }
-        .balance-pill { background: #0c0f15; padding: 5px 12px; border-radius: 20px; border: 1px solid #2d344b; display: flex; align-items: center; gap: 6px; font-weight: bold; font-size: 14px; }
-
-        /* 2. Game Viewport (Fixed Height) */
-        .game-viewport { height: 210px; background: radial-gradient(circle, #1a233a 0%, #0b0e14 100%); position: relative; display: flex; justify-content: center; align-items: center; }
-        #multiplier { font-size: 52px; font-weight: 800; font-variant-numeric: tabular-nums; }
-        #timer { position: absolute; width: 75px; height: 75px; border: 3px solid var(--accent); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 28px; font-weight: bold; background: rgba(0,0,0,0.4); }
-        #rocket { position: absolute; bottom: 20px; right: 20px; width: 65px; display: none; filter: drop-shadow(0 0 10px var(--accent)); }
-
-        /* 3. Players List (Scrollable Area) */
-        .live-bets { flex: 1; overflow-y: auto; padding: 12px; background: var(--main-bg); }
-        .bet-row { display: flex; justify-content: space-between; align-items: center; background: var(--surface); padding: 10px 14px; border-radius: 12px; margin-bottom: 6px; border: 1px solid #1e2533; }
-        .player-tag { display: flex; align-items: center; gap: 10px; font-size: 14px; }
-        .avatar-circle { width: 32px; height: 32px; border-radius: 50%; background: #252c3b; }
-        
-        /* Gift Style (The one you asked for) */
-        .gift-container { background: rgba(245, 158, 11, 0.1); border: 1px solid var(--gold); border-radius: 6px; padding: 3px 8px; display: flex; align-items: center; gap: 5px; color: var(--gold); font-size: 11px; font-weight: 800; }
-
-        /* 4. Betting Panel (Footer) */
-        .bet-panel { padding: 15px; background: var(--surface); border-top: 1px solid #252b3d; }
-        .input-wrapper { display: flex; background: #0c0f15; border-radius: 10px; padding: 10px; margin-bottom: 12px; border: 1px solid #2d344b; align-items: center; }
-        .input-wrapper input { flex: 1; background: none; border: none; color: white; text-align: center; font-size: 18px; outline: none; }
-        .action-btn { width: 100%; height: 50px; background: var(--accent); border: none; border-radius: 10px; color: white; font-size: 17px; font-weight: bold; transition: 0.2s active; }
-        .action-btn:active { transform: scale(0.98); opacity: 0.9; }
-        .action-btn.cashing { background: var(--gold); }
+        /* تثبيت العناصر */
+        .main-container { height: 100vh; display: flex; flex-direction: column; }
+        .scroll-area { flex: 1; overflow-y: auto; padding: 10px; }
+        .control-panel { background: #15191e; padding: 20px; border-top: 2px solid #2b2f36; }
+        .bet-btn { background: #f0b90b; border: none; color: #000; font-weight: bold; width: 100%; padding: 15px; border-radius: 10px; }
     </style>
 </head>
 <body>
 
-    <header>
-        <div style="color: var(--green); font-size: 11px; font-weight: bold;">● LIVE NETWORK</div>
-        <div class="balance-pill"><span id="balDisplay">1000.00</span> <img src="https://cryptologos.cc/logos/toncoin-ton-logo.png" width="14"></div>
-    </header>
+<div class="main-container">
+    <div class="p-3 d-flex justify-content-between align-items-center border-bottom border-secondary">
+        <span class="badge bg-success">Network: Live</span>
+        <div class="fw-bold">Balance: <span id="balance">1000.00</span> TON</div>
+    </div>
 
-    <main class="game-viewport">
-        <div id="multiplier" style="display:none">1.00x</div>
-        <div id="timer">5</div>
-        <img id="rocket" src="https://i.postimg.cc/pT7L6L8v/rocket.png">
-    </main>
+    <div class="game-card m-3 text-center">
+        <div id="wait-msg" class="h5 text-secondary">Starting in...</div>
+        <div id="multiplier" class="multiplier-text">1.00x</div>
+    </div>
 
-    <section class="live-bets" id="betList"></section>
-
-    <footer class="bet-panel">
-        <div class="input-wrapper">
-            <button onclick="change(0.5)" style="color:var(--accent); background:none; border:none; padding: 0 10px; font-weight: bold;">/2</button>
-            <input type="number" id="betAmount" value="10.0">
-            <button onclick="change(2)" style="color:var(--accent); background:none; border:none; padding: 0 10px; font-weight: bold;">x2</button>
+    <div class="scroll-area" id="players-list">
         </div>
-        <button class="action-btn" id="mainButton" onclick="process()">Place Bet</button>
-    </footer>
 
-    <script>
-        let balance = 1000, m = 1.0, state = "IDLE", loop, crashPoint;
-        const bots = ["CryptoKing", "TonWhale", "Shadow_X", "Luna_99", "Alpha_TON"];
+    <div class="control-panel">
+        <div class="input-group mb-3">
+            <input type="number" id="bet-amount" class="form-control bg-dark text-white border-secondary" value="10.00">
+            <span class="input-group-text bg-secondary text-white">TON</span>
+        </div>
+        <button id="action-btn" class="bet-btn">PLACE BET</button>
+    </div>
+</div>
 
-        function change(x) { document.getElementById('betAmount').value = (parseFloat(document.getElementById('betAmount').value) * x).toFixed(1); }
+<script>
+    // هذا الجزء البرمجي يتبع المنطق العالمي للألعاب (Game Loop)
+    let m = 1.0, isRunning = false, crashAt = 0;
+    const names = ["Killer_7", "Alpha_Whale", "Shadow", "Tony_IQ", "Rex"];
 
-        function roundInit() {
-            state = "WAIT"; m = 1.0;
-            document.getElementById('multiplier').style.display = "none";
-            document.getElementById('timer').style.display = "flex";
-            document.getElementById('rocket').style.display = "none";
-            document.getElementById('mainButton').innerText = "Place Bet";
-            document.getElementById('mainButton').classList.remove('cashing');
-            
-            let count = 5;
-            document.getElementById('timer').innerText = count;
-            let cd = setInterval(() => {
-                count--; document.getElementById('timer').innerText = count;
-                if(count <= 0) { clearInterval(cd); startRound(); }
-            }, 1000);
-            renderBets(false);
+    function resetRound() {
+        isRunning = false;
+        m = 1.0;
+        document.getElementById('multiplier').innerText = "1.00x";
+        document.getElementById('multiplier').style.color = "#f0b90b";
+        document.getElementById('wait-msg').innerText = "Preparing Round...";
+        
+        setTimeout(() => {
+            crashAt = (Math.random() * 5 + 1.1).toFixed(2);
+            isRunning = true;
+            document.getElementById('wait-msg').innerText = "Game in Progress";
+            requestAnimationFrame(gameLoop);
+        }, 3000);
+    }
+
+    function gameLoop() {
+        if (!isRunning) return;
+        m += 0.01;
+        document.getElementById('multiplier').innerText = m.toFixed(2) + "x";
+
+        renderPlayers();
+
+        if (m >= crashAt) {
+            isRunning = false;
+            document.getElementById('multiplier').innerText = "💥 CRASHED";
+            document.getElementById('multiplier').style.color = "#ff4d4d";
+            setTimeout(resetRound, 3000);
+        } else {
+            setTimeout(() => requestAnimationFrame(gameLoop), 100);
         }
+    }
 
-        function startRound() {
-            state = "RUN";
-            document.getElementById('timer').style.display = "none";
-            document.getElementById('multiplier').style.display = "block";
-            document.getElementById('rocket').style.display = "block";
-            crashPoint = Math.random() * 5 + 1.1;
-
-            loop = setInterval(() => {
-                m += 0.01;
-                let mEl = document.getElementById('multiplier');
-                mEl.innerText = m.toFixed(2) + "x";
-                
-                let flight = (m - 1) * 55;
-                document.getElementById('rocket').style.transform = `translate(-${flight}px, -${flight}px) rotate(45deg)`;
-                
-                if(m >= 2.5) mEl.style.color = "var(--gold)";
-                
-                renderBets(true);
-                if(m >= crashPoint) doCrash();
-            }, 80);
-        }
-
-        function renderBets(live) {
-            const container = document.getElementById('betList');
-            container.innerHTML = '';
-            bots.forEach(b => {
-                let prize;
-                // ميزة تحويل الهدايا عند 2.5
-                if (live && m >= 2.5) {
-                    prize = `<div class="gift-container"><img src="https://cdnn.iconscout.com/icon/free/png-256/free-telegram-gift-458051.png" width="16"> GIFT</div>`;
-                } else {
-                    prize = `<span style="font-weight:bold; color:var(--accent)">${(10 * m).toFixed(2)} TON</span>`;
-                }
-                container.innerHTML += `<div class="bet-row"><div class="player-tag"><div class="avatar-circle"></div><span>${b}</span></div>${prize}</div>`;
-            });
-        }
-
-        function doCrash() {
-            clearInterval(loop);
-            state = "CRASH";
-            document.getElementById('multiplier').innerText = "💥";
-            document.getElementById('mainButton').innerText = "Crashed!";
-            setTimeout(roundInit, 3000);
-        }
-
-        function process() {
-            if(state === "WAIT") {
-                let val = parseFloat(document.getElementById('betAmount').value);
-                if(balance < val) return;
-                balance -= val;
-                document.getElementById('balDisplay').innerText = balance.toFixed(2);
-                document.getElementById('mainButton').innerText = "Waiting...";
+    function renderPlayers() {
+        const list = document.getElementById('players-list');
+        list.innerHTML = '';
+        names.forEach(name => {
+            let info;
+            // الشرط العالمي: تحويل الرهان لهدايا عند مضاعف معين
+            if (m >= 2.5) {
+                info = `<span class="gift-status">🎁 PREMIUM GIFT</span>`;
+            } else {
+                info = `<span class="text-info fw-bold">${(10 * m).toFixed(2)} TON</span>`;
             }
-        }
 
-        roundInit();
-    </script>
+            list.innerHTML += `
+                <div class="player-row d-flex justify-content-between align-items-center">
+                    <span>👤 ${name}</span>
+                    ${info}
+                </div>`;
+        });
+    }
+
+    resetRound(); // تشغيل اللعبة
+</script>
+
 </body>
 </html>
